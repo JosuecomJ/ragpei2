@@ -36,3 +36,4 @@ tmp/
 
 # Sensitive information
 .env
+chroma_db/

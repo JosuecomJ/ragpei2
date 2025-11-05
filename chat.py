@@ -25,7 +25,7 @@ def carregar_componentes():
 	)
 
 	vectorstore = Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
-	retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+	retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
 	prompt_template = """
 	Você é um assistente especializado em responder perguntas sobre documentos acadêmicos e editais.
@@ -46,11 +46,39 @@ def carregar_componentes():
 		| StrOutputParser()
 	)
 
-	return retriever, rag_chain, fallback_chain
+	query_expander = (
+		ChatPromptTemplate.from_template(
+			"""
+			Gere até três reformulações concisas e relevantes para a seguinte pergunta:
+			"{pergunta}"
+			Liste cada reformulação em uma linha separada, sem enumeração e sem explicações adicionais.
+			"""
+		)
+		| llm
+		| StrOutputParser()
+	)
+
+	return retriever, query_expander, rag_chain, fallback_chain
+
+
+def expandir_consultas(query_expander, pergunta: str) -> list[str]:
+	"""Gera variações da consulta original usando o LLM e remove duplicatas."""
+	variacoes_texto = query_expander.invoke({"pergunta": pergunta})
+	variacoes = [pergunta]
+	for linha in variacoes_texto.splitlines():
+		consulta = linha.strip().lstrip("-•0123456789. ").strip()
+		if consulta:
+			variacoes.append(consulta)
+
+	consultas_unicas: list[str] = []
+	for consulta in variacoes:
+		if consulta not in consultas_unicas:
+			consultas_unicas.append(consulta)
+	return consultas_unicas
 
 
 def executar_chat():
-	retriever, rag_chain, fallback_chain = carregar_componentes()
+	retriever, query_expander, rag_chain, fallback_chain = carregar_componentes()
 
 	print("=" * 50)
 	print("💬 CHAT RAG - Digite 'sair' para encerrar")
@@ -65,7 +93,18 @@ def executar_chat():
 			break
 
 		print("\n🔍 Processando...")
-		documentos = retriever.invoke(pergunta)
+		consultas = expandir_consultas(query_expander, pergunta)
+		documentos_coletados = []
+		for consulta in consultas:
+			documentos_coletados.extend(retriever.invoke(consulta))
+
+		visto = set()
+		documentos = []
+		for doc in documentos_coletados:
+			chave = doc.page_content
+			if chave not in visto:
+				visto.add(chave)
+				documentos.append(doc)
 
 		if documentos:
 			resposta = rag_chain.invoke({"input": pergunta, "context": documentos})

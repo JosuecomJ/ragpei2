@@ -1,0 +1,38 @@
+# Byte-compiled / optimized / compiled files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Editor/OS specific files
+.DS_Store
+.vscode/
+*.swp
+*.bak
+*~
+
+# Package management
+# pip-installed packages
+*.egg
+*.whl
+
+# Distribution / build files
+dist/
+build/
+*.zip
+*.tar.gz
+
+# Logs and temporary files
+*.log
+tmp/
+
+# Sensitive information
+.env

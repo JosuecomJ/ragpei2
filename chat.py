@@ -12,7 +12,20 @@ from langchain_classic.chains.combine_documents import create_stuff_documents_ch
 
 
 def carregar_componentes():
-	"""Inicializa LLM, embeddings e carrega o vetor store persistido."""
+	"""
+ 	Inicializa e retorna os principais componentes para um sistema RAG (Retrieval-Augmented Generation):
+
+	- Carrega a chave de API do Google Gemini a partir do arquivo .env.
+	- Inicializa o modelo de linguagem (LLM) ChatGoogleGenerativeAI.
+	- Carrega o vetor store persistido via Chroma e cria um retriever para busca de contexto.
+	- Define o template de prompt para respostas detalhadas baseadas em contexto.
+	- Cria a cadeia RAG para geração de respostas com base em documentos.
+	- Cria uma cadeia de fallback para respostas baseadas em conhecimento geral.
+	- Cria um expansor de perguntas para gerar reformulações da consulta do usuário.
+
+	Returns:
+		tuple: (retriever, query_expander, rag_chain, fallback_chain)
+	"""
 	load_dotenv()
 	api_key = os.getenv("GOOGLE_API_KEY")
 	if not api_key:
@@ -62,6 +75,16 @@ def carregar_componentes():
 
 
 def expandir_consultas(query_expander, pergunta: str) -> list[str]:
+	"""
+	Expande uma consulta original gerando variações usando um modelo de linguagem (LLM) e remove duplicatas.
+
+	Args:
+		query_expander: Um objeto capaz de gerar variações da consulta via método `invoke`.
+		pergunta (str): Consulta original a ser expandida.
+
+	Returns:
+		list[str]: Lista de consultas únicas, incluindo a original e suas variações geradas.
+	"""
 	"""Gera variações da consulta original usando o LLM e remove duplicatas."""
 	variacoes_texto = query_expander.invoke({"pergunta": pergunta})
 	variacoes = [pergunta]

@@ -47,7 +47,7 @@ embeddings = HuggingFaceEmbeddings(
 )
 
 # --- 2. LOAD, SPLIT e STORE (Executado apenas uma vez) ---
-# Em um app real, isso seria feito offline. Aqui, fazemos no início.
+# Em um app real, isso seria feito em um script separado só para carregar e criar os dados no ChromaDB
 print(f"Processando PDF...")
 loader = PyPDFLoader(ARQUIVO_PDF)
 documents = loader.load()
@@ -88,6 +88,31 @@ class GraphState(TypedDict):
 
 # NÓ 1: BUSCAR DOCUMENTOS
 def retrieve_docs(state: GraphState) -> GraphState:
+    """
+    Retrieve relevant documents from the ChromaDB vector store based on the user's question.
+
+    This function is a node in the LangGraph state machine that queries the retriever
+    to find documents relevant to the user's question and updates the graph state.
+
+    Args:
+        state (GraphState): The current state of the graph containing:
+            - pergunta (str): The user's question to search for relevant documents
+
+    Returns:
+        GraphState: Updated state dictionary containing:
+            - documentos (list): List of Document objects retrieved from ChromaDB
+            - pergunta (str): The original question passed through unchanged
+
+    Side Effects:
+        - Prints node execution message to console
+        - Prints the number of documents found
+
+    Example:
+        >>> state = {"pergunta": "What is machine learning?"}
+        >>> new_state = retrieve_docs(state)
+        --- NÓ: RETRIEVE_DOCS ---
+        Documentos encontrados: 5
+    """
     print("--- NÓ: RETRIEVE_DOCS ---")
     pergunta = state['pergunta']
     # O retriever do ChromaDB (definido acima)
@@ -157,8 +182,8 @@ def grade_documents(state: GraphState) -> GraphState:
         """
     )
     
-    # Usamos o Gemini 1.5 Flash (rápido) para a avaliação
-    eval_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
+    # Usamos o Gemini 2.5 Flash (rápido) para a avaliação
+    eval_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key)
     eval_chain = prompt | eval_llm | StrOutputParser()
     
     resultado = eval_chain.invoke({

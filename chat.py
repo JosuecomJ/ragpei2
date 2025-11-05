@@ -78,6 +78,26 @@ def expandir_consultas(query_expander, pergunta: str) -> list[str]:
 
 
 def executar_chat():
+	"""
+	Inicia um chat interativo utilizando um sistema RAG (Retrieval-Augmented Generation).
+
+	O usuário pode digitar perguntas, que são processadas por um pipeline de expansão de consultas,
+	recuperação de documentos e geração de respostas. Caso nenhum documento relevante seja encontrado,
+	uma cadeia de fallback é utilizada para gerar a resposta.
+
+	O chat permanece ativo até que o usuário digite 'sair', 'exit' ou 'quit'.
+
+	Fluxo principal:
+		1. Carrega os componentes necessários (retriever, query_expander, rag_chain, fallback_chain).
+		2. Exibe instruções iniciais do chat.
+		3. Recebe perguntas do usuário em loop.
+		4. Expande a consulta e recupera documentos relevantes.
+		5. Remove documentos duplicados.
+		6. Gera resposta baseada nos documentos ou utiliza fallback.
+		7. Exibe a resposta ao usuário.
+
+	Não recebe parâmetros e não retorna valores.
+	"""
 	retriever, query_expander, rag_chain, fallback_chain = carregar_componentes()
 
 	print("=" * 50)

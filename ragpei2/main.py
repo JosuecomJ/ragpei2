@@ -27,7 +27,6 @@ from langchain_classic.chains.combine_documents import create_stuff_documents_ch
 from langgraph.graph import StateGraph, END
 
 # --- Configuração ---
-print("Carregando configurações...")
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
@@ -36,11 +35,9 @@ if not api_key:
 ARQUIVO_PDF = "./ragpei2/docs/edital_mestrado_ppgi_2025_2.pdf"
 
 # --- 1. Inicializar Modelos Gemini ---
-print("Inicializando modelos...")
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key)
 
 # Usar modelo de embedding local e gratuito
-print("Carregando modelo de embeddings local...")
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2",
     model_kwargs={'device': 'cpu'}
@@ -48,12 +45,10 @@ embeddings = HuggingFaceEmbeddings(
 
 # --- 2. LOAD, SPLIT e STORE (Executado apenas uma vez) ---
 # Em um app real, isso seria feito em um script separado só para carregar e criar os dados no ChromaDB
-print(f"Processando PDF...")
 loader = PyPDFLoader(ARQUIVO_PDF)
 documents = loader.load()
 
 # Dividir o texto em chunks menores
-print("Dividindo texto em chunks...")
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
     chunk_overlap=200,
@@ -66,15 +61,12 @@ splits = text_splitter.split_documents(documents)
 CHROMA_DB_DIR = "./chroma_db"
 
 if os.path.exists(CHROMA_DB_DIR):
-    print("Carregando banco de dados ChromaDB persistido...")
     vectorstore = Chroma(persist_directory=CHROMA_DB_DIR, embedding_function=embeddings)
 else:
-    print("Criando embeddings e armazenando no ChromaDB...")
     vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings, persist_directory=CHROMA_DB_DIR)
     vectorstore.persist()
 
 retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-print("Vector Store pronto.")
 
 
 # --- 3. Definir o Estado do Grafo (LangGraph) ---
@@ -199,7 +191,6 @@ def grade_documents(state: GraphState) -> GraphState:
         return "irrelevante"
 
 # --- 5. Construir o Grafo (LangGraph) ---
-print("Construindo o grafo...")
 
 workflow = StateGraph(GraphState)
 
@@ -231,14 +222,9 @@ workflow.add_edge("fallback", END)
 
 # Compila o grafo
 app = workflow.compile()
-print("Grafo compilado. Pronto.")
-print("-" * 50)
 
 
 # --- 6. Executar o Grafo em modo Chat ---
-print("=" * 50)
-print("💬 CHAT RAG - Digite 'sair' para encerrar")
-print("=" * 50)
 
 while True:
     # Solicita a pergunta do usuário

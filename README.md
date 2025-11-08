@@ -55,6 +55,17 @@ poetry install
    - Coloque o PDF do edital em `ragpei2/docs/edital_mestrado_ppgi_2025_2.pdf`
    - Ou ajuste o caminho no código em `main.py`
 
+## 📦 Exportando requirements.txt (opcional)
+
+Se precisar de um arquivo `requirements.txt` para deploy em ambientes que não usam Poetry, gere com:
+
+```bash
+poetry export -f requirements.txt --output requirements.txt
+```
+
+Isso criará um arquivo `requirements.txt` com todas as dependências do projeto.
+com isso sera sera possivel instalar as dependencias usando ` pip install -r requirements.txt`
+
 ## 🚀 Como Executar
 
 1. **Ative o ambiente virtual**:
@@ -155,6 +166,22 @@ text_splitter = RecursiveCharacterTextSplitter(
     length_function=len,
 )
 ```
+
+## 💬 Interface Web com Streamlit
+
+Também é possível interagir com o sistema via uma interface de chat moderna na web usando Streamlit.
+
+1. **Execute o frontend Streamlit**:
+
+```bash
+poetry run streamlit run app.py
+```
+
+2. **Acesse no navegador**:
+   - O Streamlit exibirá um link (geralmente http://localhost:8501)
+   - Faça perguntas diretamente na interface web, com histórico de chat e visual moderno
+
+> **Obs:** O backend não será reprocessado a cada execução do Streamlit, apenas consultas ao banco vetorial já criado.
 
 ## 🤝 Contribuição
 
